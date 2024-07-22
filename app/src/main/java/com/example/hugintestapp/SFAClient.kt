@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.*
+import android.util.Log
 import hugin.common.lib.constants.IntentConsts
 import hugin.common.lib.constants.MessengerConsts
 import hugin.common.lib.d10.*
@@ -21,14 +22,6 @@ class SFAClient(private var activity: Activity?) : D10Client {
         clientMessenger = Messenger(IncomingHandler(listener))
     }
 
-    /**
-     * Method to send D10 protocol messages to service
-     *
-     * @param posMessage abstract POS message class, other public
-     * methods can type check or take related
-     * parameters and call this method to send D10
-     * messages to service. (e.g. public void sendPaymentRequest(PaymentRequest payReq))
-     */
     override fun sendD10Message(posMessage: POSMessage) {
         val runnable = Runnable {
             val msg = Message.obtain(null, MessengerConsts.ACTION_D10_MESSAGE, 0, 0)
@@ -43,6 +36,7 @@ class SFAClient(private var activity: Activity?) : D10Client {
             }
         }
         if (bound) {
+
             // Create and send a message to the service, using a supported 'what' value
             runnable.run()
         } else {
@@ -67,6 +61,7 @@ class SFAClient(private var activity: Activity?) : D10Client {
             }
         }
         if (bound) {
+            Log.e("Helalkeee", "Bravo")
             // Create and send a message to the service, using a supported 'what' value
             runnable.run()
         } else {
@@ -121,8 +116,7 @@ class SFAClient(private var activity: Activity?) : D10Client {
         }
     }
 
-    private class IncomingHandler  // TODO add interface to update ui
-    constructor(var listener: D10ResponseListener) : Handler() {
+    private class IncomingHandler(var listener: D10ResponseListener) : Handler() {
         override fun handleMessage(msg: Message) {
             val data = msg.data
             when (msg.what) {
