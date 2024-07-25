@@ -124,63 +124,67 @@ private const val strFreeFormat = """[
       "align": "center",
       "font": "normal",
       "lineFeed": true,
-      "style": "bold"
+      "style": "normal"
     },
     "type": "TEXT",
-    "value": "KALIN ORTALI"
+    "value": "HUGIN PAZARLAMA"
+  },
+  {
+    "type": "PAPERSKIP",
+    "value": "2"
   },
   {
     "attr": {
-      "align": "left",
+      "align": "center",
       "font": "normal",
       "lineFeed": true,
       "style": "bold"
     },
     "type": "TEXT",
-    "value": "NORMALKALIN EN FAZLA 32 KARAKTER"
+    "value": "OTOPARK ARAÇ GİRİŞ FİŞİ"
+  },
+  {
+    "type": "PAPERSKIP",
+    "value": "2"
   },
   {
     "attr": {
       "align": "center",
-      "font": "small",
+      "font": "normal",
       "lineFeed": true,
-      "style": "normal"
+      "style": "bold"
     },
     "type": "TEXT",
-    "value": "KÜÇÜK FONTLA EN FAZLA 48 KARAKTER YAZDIRILABİLİR"
+    "value": "OTOMOBİL"
+  },
+  {
+    "type": "PAPERSKIP",
+    "value": "2"
   },
   {
     "attr": {
-      "align": "left",
-      "font": "small",
+      "align": "center",
+      "font": "normal",
       "lineFeed": false,
       "style": "normal"
     },
     "type": "TEXT",
-    "value": "SOLDAN YAZIM"
+    "value": "PLAKA"
   },
   {
-    "attr": {
-      "align": "right",
-      "font": "small",
-      "lineFeed": true,
-      "style": "normal"
-    },
-    "type": "TEXT",
-    "value": " SAĞDAN YAZIM"
+    "type": "PAPERSKIP",
+    "value": "2"
   },
- 
   {
     "attr": {
       "align": "center",
-      "font": "normal",
-      "lineFeed": true,
-      "style": "normal"
+      "height": 150,
+      "offset": 0,
+      "width": 150
     },
-    "type": "TEXT",
-    "value": "NORMAL YAZI İLE TİPİ 32 KARAKTER"
+    "type": "QRCODE",
+    "value": "Hello"
   },
-  
   {
     "type": "PAPERSKIP",
     "value": "4"
