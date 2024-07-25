@@ -10,9 +10,10 @@ import android.util.Log
 import hugin.common.lib.constants.IntentConsts
 import hugin.common.lib.constants.MessengerConsts
 import hugin.common.lib.d10.*
+import hugin.common.lib.d10.tables.PrintFormatType
 
 class SFAClient(private var activity: Activity?) : D10Client {
-    private lateinit var clientMessenger: Messenger
+    private var clientMessenger: Messenger? = null
     private var bound = false
     private var serviceMessenger: Messenger? = null
     private var fiscalConn: ServiceConnection? = null
@@ -35,8 +36,6 @@ class SFAClient(private var activity: Activity?) : D10Client {
             }
         }
         if (bound) {
-
-            // Create and send a message to the service, using a supported 'what' value
             runnable.run()
         } else {
             bindService(runnable)
@@ -60,7 +59,6 @@ class SFAClient(private var activity: Activity?) : D10Client {
             }
         }
         if (bound) {
-            // Create and send a message to the service, using a supported 'what' value
             runnable.run()
         } else {
             bindService(runnable)
@@ -85,7 +83,6 @@ class SFAClient(private var activity: Activity?) : D10Client {
             }
         }
         if (bound) {
-            // Create and send a message to the service, using a supported 'what' value
             runnable.run()
         } else {
             bindService(runnable)
@@ -132,13 +129,11 @@ class SFAClient(private var activity: Activity?) : D10Client {
             }
         }
         if (bound) {
-            // Create and send a message to the service, using a supported 'what' value
             runnable.run()
         } else {
             bindService(runnable)
         }
     }
-
 
     private class IncomingHandler(var listener: D10ResponseListener) : Handler() {
         override fun handleMessage(msg: Message) {

@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import com.example.hugintestapp.ui.theme.HuginTestAppTheme
 import hugin.common.lib.constants.IntentConsts
 import hugin.common.lib.constants.MessengerConsts
+import hugin.common.lib.d10.POSMessage
 import hugin.common.lib.helper.BaseTarget
 
 class MainActivity : ComponentActivity() {
@@ -63,6 +64,27 @@ class MainActivity : ComponentActivity() {
                         }) {
                             Text(text = "Yazdır")
                         }
+                        Button(onClick = {
+                            openTarget()
+                        }) {
+                            Text(text = "Open Target")
+                        }
+                        Button(onClick = {
+                            val paymentRequestProtocol = PaymentRequestProtocol(this@MainActivity, null)
+                            paymentRequestProtocol.setOnClickListener(object : BaseProtocolView.OnClickListener {
+                                override fun onSend(posMessage: POSMessage?) {
+                                    if (posMessage != null) {
+                                        (d10Client as SFAClient).sendD10Message(posMessage)
+                                    }
+                                    else{
+                                        Log.e("mesaj yok", "mesaj yok")
+                                    }
+                                }
+                            })
+                            paymentRequestProtocol.sendMessage()
+                        }) {
+                            Text(text = "Try Payment")
+                        }
                     }
                 }
             }
@@ -98,6 +120,7 @@ class MainActivity : ComponentActivity() {
         })
     }
 
+
     private fun printJson() {
         val serviceManager: SFAClient? = if (d10Client is SFAClient) {
             d10Client as SFAClient?
@@ -112,6 +135,25 @@ class MainActivity : ComponentActivity() {
                     data.classLoader = BaseTarget::class.java.classLoader
                 } else {
                     Log.e("HATA", "SFA hatası")
+                }
+            }
+        })
+    }
+
+    private fun openTarget() {
+        val serviceManager: SFAClient? = if (d10Client is SFAClient) {
+            d10Client as SFAClient?
+        } else {
+            return
+        }
+
+        serviceManager!!.sendOpenTarget(object : SFAResponseListener {
+            override fun onResponse(msg: Message?) {
+                if (msg != null && MessengerConsts.ACTION_OPEN_TARGET == msg.what) {
+                    val data = msg.data
+                    data.classLoader = BaseTarget::class.java.classLoader
+                } else {
+                    Log.e("HATA", "Open Target hatası")
                 }
             }
         })
