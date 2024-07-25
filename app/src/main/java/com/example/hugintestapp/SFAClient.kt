@@ -10,7 +10,6 @@ import android.util.Log
 import hugin.common.lib.constants.IntentConsts
 import hugin.common.lib.constants.MessengerConsts
 import hugin.common.lib.d10.*
-import hugin.common.lib.log.LogH
 
 class SFAClient(private var activity: Activity?) : D10Client {
     private lateinit var clientMessenger: Messenger
@@ -61,7 +60,6 @@ class SFAClient(private var activity: Activity?) : D10Client {
             }
         }
         if (bound) {
-            Log.e("Helalkeee", "Bravo")
             // Create and send a message to the service, using a supported 'what' value
             runnable.run()
         } else {
@@ -116,6 +114,32 @@ class SFAClient(private var activity: Activity?) : D10Client {
         }
     }
 
+    fun onPrintFreeFormat(strJson: String?, incomingHandler: SFAResponseListener) {
+        val runnable = Runnable {
+            val msg = Message.obtain(null, MessengerConsts.ACTION_PRINT_FREE_FORMAT, 0, 0)
+            val data = Bundle()
+            data.putString(IntentConsts.EXTRA_JSON_CONTENT, strJson)
+            msg.data = data
+            try {
+                msg.replyTo = Messenger(object : Handler() {
+                    override fun handleMessage(msg: Message) {
+                        incomingHandler.onResponse(msg)
+                    }
+                })
+                serviceMessenger!!.send(msg)
+            } catch (e: RemoteException) {
+                e.printStackTrace()
+            }
+        }
+        if (bound) {
+            // Create and send a message to the service, using a supported 'what' value
+            runnable.run()
+        } else {
+            bindService(runnable)
+        }
+    }
+
+
     private class IncomingHandler(var listener: D10ResponseListener) : Handler() {
         override fun handleMessage(msg: Message) {
             val data = msg.data
@@ -139,46 +163,58 @@ class SFAClient(private var activity: Activity?) : D10Client {
                                 parsedResponse = EndOfDayResponse.Builder(responseMes).build()
                                 listener.onResponse(parsedResponse)
                             }
+
                             MessageTypes.RESP_CONFIG -> {
                                 parsedResponse = ConfigurationResponse.Builder(responseMes).build()
                                 listener.onResponse(parsedResponse)
                             }
+
                             MessageTypes.RESP_PAYMENT -> {
                                 parsedResponse = PaymentResponse.Builder(responseMes).build()
                                 listener.onResponse(parsedResponse)
                             }
+
                             MessageTypes.RESP_SLIP_COPY -> {
                                 val parsedSlipCopyResp =
                                     SlipCopyResponse.Builder(responseMes).build()
                                 listener.onResponse(parsedSlipCopyResp)
                             }
+
                             MessageTypes.RESP_PRINT -> {
                                 val printResponse = PrintResponse.Builder(responseMes).build()
                                 if (printResponse.slipContent != null) {
                                     listener.onResponse(printResponse)
                                 }
                             }
+
                             MessageTypes.RESP_BANK_LIST -> {
                                 val bankListResponse = BankListResponse.Builder(responseMes).build()
                                 listener.onResponse(bankListResponse)
                             }
+
                             MessageTypes.RESP_INFO_QUERY -> {
                                 parsedResponse = InfoQueryResponse.Builder(responseMes).build()
                                 listener.onResponse(parsedResponse)
                             }
+
                             MessageTypes.RESP_MAINTENANCE -> {
                                 parsedResponse = MaintenanceResponse.Builder(responseMes).build()
                                 listener.onResponse(parsedResponse)
                             }
+
                             MessageTypes.RESP_DEVICE_INFO -> {
                                 parsedResponse = DeviceInfoResponse.Builder(responseMes).build()
                                 listener.onResponse(parsedResponse)
                             }
+
                             MessageTypes.RESP_TRAN_QUERY -> {
                                 parsedResponse = TranQueryResponse.Builder(responseMes).build()
                                 listener.onResponse(parsedResponse)
                             }
-                            else ->{listener.onResponse(null)}
+
+                            else -> {
+                                listener.onResponse(null)
+                            }
                         }
                     } else {
                         val errorCode = data.getInt(IntentConsts.EXTRA_ERROR_CODE)
@@ -198,7 +234,7 @@ class SFAClient(private var activity: Activity?) : D10Client {
     init {
         fiscalConn = object : ServiceConnection {
             override fun onServiceConnected(name: ComponentName, service: IBinder) {
-                LogH.debug("FiscalConn Service Connected")
+                Log.e("Fiscal", "FiscalConn Service Connected")
                 serviceMessenger = Messenger(service)
                 bound = true
                 if (runOnConnect != null) {
@@ -207,7 +243,7 @@ class SFAClient(private var activity: Activity?) : D10Client {
             }
 
             override fun onServiceDisconnected(name: ComponentName) {
-                LogH.debug("FiscalConn Service Disconnected")
+                Log.e("Fiscal", "FiscalConn Service Disconnected")
                 serviceMessenger = null
                 bound = false
             }

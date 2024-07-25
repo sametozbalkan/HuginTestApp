@@ -2,6 +2,7 @@ package com.example.hugintestapp
 
 import android.os.Bundle
 import android.os.Message
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -57,6 +58,11 @@ class MainActivity : ComponentActivity() {
                         ) {
                             Text(text = "Verileri Çek")
                         }
+                        Button(onClick = {
+                            printJson()
+                        }) {
+                            Text(text = "Yazdır")
+                        }
                     }
                 }
             }
@@ -91,4 +97,94 @@ class MainActivity : ComponentActivity() {
             }
         })
     }
+
+    private fun printJson() {
+        val serviceManager: SFAClient? = if (d10Client is SFAClient) {
+            d10Client as SFAClient?
+        } else {
+            return
+        }
+
+        serviceManager!!.onPrintFreeFormat(strFreeFormat, object : SFAResponseListener {
+            override fun onResponse(msg: Message?) {
+                if (msg != null && MessengerConsts.ACTION_PRINT_FREE_FORMAT == msg.what) {
+                    val data = msg.data
+                    data.classLoader = BaseTarget::class.java.classLoader
+                } else {
+                    Log.e("HATA", "SFA hatası")
+                }
+            }
+        })
+    }
 }
+
+private const val strFreeFormat = """[
+  {
+    "attr": {
+      "align": "center",
+      "font": "normal",
+      "lineFeed": true,
+      "style": "bold"
+    },
+    "type": "TEXT",
+    "value": "KALIN ORTALI"
+  },
+  {
+    "attr": {
+      "align": "left",
+      "font": "normal",
+      "lineFeed": true,
+      "style": "bold"
+    },
+    "type": "TEXT",
+    "value": "NORMALKALIN EN FAZLA 32 KARAKTER"
+  },
+  {
+    "attr": {
+      "align": "center",
+      "font": "small",
+      "lineFeed": true,
+      "style": "normal"
+    },
+    "type": "TEXT",
+    "value": "KÜÇÜK FONTLA EN FAZLA 48 KARAKTER YAZDIRILABİLİR"
+  },
+  {
+    "attr": {
+      "align": "left",
+      "font": "small",
+      "lineFeed": false,
+      "style": "normal"
+    },
+    "type": "TEXT",
+    "value": "SOLDAN YAZIM"
+  },
+  {
+    "attr": {
+      "align": "right",
+      "font": "small",
+      "lineFeed": true,
+      "style": "normal"
+    },
+    "type": "TEXT",
+    "value": " SAĞDAN YAZIM"
+  },
+ 
+  {
+    "attr": {
+      "align": "center",
+      "font": "normal",
+      "lineFeed": true,
+      "style": "normal"
+    },
+    "type": "TEXT",
+    "value": "NORMAL YAZI İLE TİPİ 32 KARAKTER"
+  },
+  
+  {
+    "type": "PAPERSKIP",
+    "value": "4"
+  }
+]
+"""
+
