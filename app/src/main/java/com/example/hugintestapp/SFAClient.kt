@@ -39,6 +39,10 @@ class SFAClient(private var activity: Activity?) : D10Client {
         clientMessenger = Messenger(IncomingHandler(listener))
     }
 
+    fun isClientMessengerInitialized(): Boolean {
+        return ::clientMessenger.isInitialized
+    }
+
     override fun sendD10Message(posMessage: POSMessage) {
         val runnable = Runnable {
             val msg = Message.obtain(null, MessengerConsts.ACTION_D10_MESSAGE, 0, 0)
@@ -49,6 +53,7 @@ class SFAClient(private var activity: Activity?) : D10Client {
                 msg.replyTo = clientMessenger
                 serviceMessenger!!.send(msg)
             } catch (e: RemoteException) {
+                Log.e("HATA", "HATA")
                 e.printStackTrace()
             }
         }

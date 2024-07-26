@@ -2,6 +2,7 @@ package com.example.hugintestapp
 
 import hugin.common.lib.d10.POSMessage
 import hugin.common.lib.d10.PaymentRequest
+import hugin.common.lib.d10.tables.PrintFormatType
 import hugin.common.lib.d10.tables.TransactionType
 
 abstract class PaymentProtocol<T : POSMessage?> protected constructor() {
@@ -40,8 +41,8 @@ class PaymentRequestProtocolView : PaymentProtocol<PaymentRequest?>() {
 
     private fun createPaymentRequest(): PaymentRequest {
         val builder = PaymentRequest.Builder(
-            "N7A705244708", 1, 20.0
-        ).setTranType(TransactionType.SALE)
+            "555555555", 1, 20.0
+        ).setTranType(TransactionType.SALE).setPrintFormatType(PrintFormatType.PRINT_ON_DEVICE.ordinal)
         return builder.build()
     }
 }

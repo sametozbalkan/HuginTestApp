@@ -19,9 +19,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.example.hugintestapp.ui.theme.HuginTestAppTheme
+import hugin.common.lib.constants.ErrorMessage
+import hugin.common.lib.constants.Errors
 import hugin.common.lib.constants.IntentConsts
 import hugin.common.lib.constants.MessengerConsts
 import hugin.common.lib.d10.POSMessage
+import hugin.common.lib.d10.PaymentResponse
+import hugin.common.lib.d10.PrintRequest
 import hugin.common.lib.helper.BaseTarget
 
 class MainActivity : ComponentActivity() {
@@ -31,6 +35,29 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         d10Client = SFAClient(this)
+        (d10Client as SFAClient).setListener(object : D10ResponseListener {
+            override fun onResponse(posMessage: POSMessage?) {
+                if (posMessage == null) {
+                    Log.e("HATA", "FISCAL APP KULLANIMDA")
+                } else {
+                    if (posMessage is PaymentResponse) {
+                        val errorCode = posMessage.errorCode
+                        if (errorCode == Errors.INCORRECT_CONTENT || errorCode != Errors.USER_INTERRUPT && errorCode != Errors.USER_TIMEOUT && errorCode <= 99) {
+                            val printRequest = PrintRequest.Builder(
+                                posMessage.serialNo,
+                                posMessage.messageNumber + 1, posMessage.acquirerId
+                            )
+                            (d10Client as SFAClient).sendD10Message(printRequest.build())
+                            Log.e("ÇIKTI", printRequest.build().toString())
+                        }
+                    }
+                }
+            }
+
+            override fun onError(errorCode: Int) {
+                Log.e("HATA", getString(ErrorMessage.getErrorsString(errorCode)))
+            }
+        })
         setContent {
             HuginTestAppTheme {
                 var isSupport507 by remember { mutableStateOf("") }
@@ -69,18 +96,7 @@ class MainActivity : ComponentActivity() {
                             Text(text = "Yazdır")
                         }
                         Button(onClick = {
-                            val paymentRequestProtocolView = PaymentRequestProtocolView()
-                            val listener: PaymentProtocol.OnClickListener = object : PaymentProtocol.OnClickListener {
-                                override fun onSend(posMessage: POSMessage?) {
-                                    if (posMessage != null) {
-                                        (d10Client as SFAClient).sendD10Message(posMessage)
-
-                                    }
-                                }
-
-                            }
-                            paymentRequestProtocolView.setOnClickListener(listener)
-                            paymentRequestProtocolView.sendMessage()
+                            payment()
                         }) {
                             Text(text = "Try Payment")
                         }
@@ -88,6 +104,24 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun payment() {
+        val paymentRequestProtocolView = PaymentRequestProtocolView()
+        val listener: PaymentProtocol.OnClickListener = object : PaymentProtocol.OnClickListener {
+            override fun onSend(posMessage: POSMessage?) {
+                if (posMessage != null) {
+                    val client = d10Client as SFAClient
+                    if (client.isClientMessengerInitialized()) {
+                        client.sendD10Message(posMessage)
+                    } else {
+                        Log.e("Error", "clientMessenger is not initialized")
+                    }
+                }
+            }
+        }
+        paymentRequestProtocolView.setOnClickListener(listener)
+        paymentRequestProtocolView.sendMessage()
     }
 
     private fun getTerminalInfo(
