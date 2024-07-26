@@ -12,7 +12,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.example.hugintestapp.ui.theme.HuginTestAppTheme
 import hugin.common.lib.constants.IntentConsts
@@ -65,23 +69,18 @@ class MainActivity : ComponentActivity() {
                             Text(text = "Yazdır")
                         }
                         Button(onClick = {
-                            openTarget()
-                        }) {
-                            Text(text = "Open Target")
-                        }
-                        Button(onClick = {
-                            val paymentRequestProtocol = PaymentRequestProtocol(this@MainActivity, null)
-                            paymentRequestProtocol.setOnClickListener(object : BaseProtocolView.OnClickListener {
+                            val paymentRequestProtocolView = PaymentRequestProtocolView()
+                            val listener: PaymentProtocol.OnClickListener = object : PaymentProtocol.OnClickListener {
                                 override fun onSend(posMessage: POSMessage?) {
                                     if (posMessage != null) {
                                         (d10Client as SFAClient).sendD10Message(posMessage)
-                                    }
-                                    else{
-                                        Log.e("mesaj yok", "mesaj yok")
+
                                     }
                                 }
-                            })
-                            paymentRequestProtocol.sendMessage()
+
+                            }
+                            paymentRequestProtocolView.setOnClickListener(listener)
+                            paymentRequestProtocolView.sendMessage()
                         }) {
                             Text(text = "Try Payment")
                         }
@@ -120,7 +119,6 @@ class MainActivity : ComponentActivity() {
         })
     }
 
-
     private fun printJson() {
         val serviceManager: SFAClient? = if (d10Client is SFAClient) {
             d10Client as SFAClient?
@@ -135,25 +133,6 @@ class MainActivity : ComponentActivity() {
                     data.classLoader = BaseTarget::class.java.classLoader
                 } else {
                     Log.e("HATA", "SFA hatası")
-                }
-            }
-        })
-    }
-
-    private fun openTarget() {
-        val serviceManager: SFAClient? = if (d10Client is SFAClient) {
-            d10Client as SFAClient?
-        } else {
-            return
-        }
-
-        serviceManager!!.sendOpenTarget(object : SFAResponseListener {
-            override fun onResponse(msg: Message?) {
-                if (msg != null && MessengerConsts.ACTION_OPEN_TARGET == msg.what) {
-                    val data = msg.data
-                    data.classLoader = BaseTarget::class.java.classLoader
-                } else {
-                    Log.e("HATA", "Open Target hatası")
                 }
             }
         })

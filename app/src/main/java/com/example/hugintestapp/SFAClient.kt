@@ -5,15 +5,32 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.os.*
+import android.os.Bundle
+import android.os.Handler
+import android.os.IBinder
+import android.os.Message
+import android.os.Messenger
+import android.os.RemoteException
 import android.util.Log
 import hugin.common.lib.constants.IntentConsts
 import hugin.common.lib.constants.MessengerConsts
-import hugin.common.lib.d10.*
-import hugin.common.lib.d10.tables.PrintFormatType
+import hugin.common.lib.d10.BankListResponse
+import hugin.common.lib.d10.ConfigurationResponse
+import hugin.common.lib.d10.DeviceInfoResponse
+import hugin.common.lib.d10.EndOfDayResponse
+import hugin.common.lib.d10.InfoQueryResponse
+import hugin.common.lib.d10.MaintenanceResponse
+import hugin.common.lib.d10.MessageBuilder
+import hugin.common.lib.d10.MessageConstants
+import hugin.common.lib.d10.MessageTypes
+import hugin.common.lib.d10.POSMessage
+import hugin.common.lib.d10.PaymentResponse
+import hugin.common.lib.d10.PrintResponse
+import hugin.common.lib.d10.SlipCopyResponse
+import hugin.common.lib.d10.TranQueryResponse
 
 class SFAClient(private var activity: Activity?) : D10Client {
-    private var clientMessenger: Messenger? = null
+    private lateinit var clientMessenger: Messenger
     private var bound = false
     private var serviceMessenger: Messenger? = null
     private var fiscalConn: ServiceConnection? = null
@@ -46,30 +63,6 @@ class SFAClient(private var activity: Activity?) : D10Client {
         val runnable = Runnable {
             val msg = Message.obtain(null, MessengerConsts.ACTION_TERMINAL_INFO, 0, 0)
             val data = Bundle()
-            msg.data = data
-            try {
-                msg.replyTo = Messenger(object : Handler() {
-                    override fun handleMessage(msg: Message) {
-                        incomingHandler.onResponse(msg)
-                    }
-                })
-                serviceMessenger!!.send(msg)
-            } catch (e: RemoteException) {
-                e.printStackTrace()
-            }
-        }
-        if (bound) {
-            runnable.run()
-        } else {
-            bindService(runnable)
-        }
-    }
-
-    fun sendOpenTarget(incomingHandler: SFAResponseListener) {
-        val runnable = Runnable {
-            val msg = Message.obtain(null, MessengerConsts.ACTION_OPEN_TARGET, 0, 0)
-            val data = Bundle()
-            data.putString(IntentConsts.EXTRA_TARGET_ID, IntentConsts.NL_TECHPOS_PACKAGE)
             msg.data = data
             try {
                 msg.replyTo = Messenger(object : Handler() {
@@ -166,7 +159,8 @@ class SFAClient(private var activity: Activity?) : D10Client {
 
                             MessageTypes.RESP_PAYMENT -> {
                                 parsedResponse = PaymentResponse.Builder(responseMes).build()
-                                listener.onResponse(parsedResponse)
+                                val cevap = listener.onResponse(parsedResponse)
+                                Log.e("Gelisme", cevap.toString())
                             }
 
                             MessageTypes.RESP_SLIP_COPY -> {
