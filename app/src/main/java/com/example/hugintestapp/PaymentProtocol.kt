@@ -6,7 +6,7 @@ import hugin.common.lib.d10.tables.PrintFormatType
 
 abstract class PaymentProtocol<T : POSMessage?> protected constructor() {
 
-    private var messageSequenceNo = 1
+    var messageSequenceNo = 1
     private lateinit var onClickListener: OnClickListener
 
     protected abstract fun getProtocolObject(): T
@@ -31,14 +31,14 @@ abstract class PaymentProtocol<T : POSMessage?> protected constructor() {
     }
 }
 
-class PaymentRequestProtocolView(private val tranType: Int) : PaymentProtocol<PaymentRequest?>() {
+class PaymentRequestProtocol(private val tranType: Int) : PaymentProtocol<PaymentRequest?>() {
     override fun getProtocolObject(): PaymentRequest {
         return createPaymentRequest(tranType = tranType)
     }
 
     private fun createPaymentRequest(tranType: Int): PaymentRequest {
         val builder = PaymentRequest.Builder(
-            "555555555", 1, 20.0
+            "555555555", messageSequenceNo, 20.0
         ).setTranType(tranType).setPrintFormatType(PrintFormatType.PRINT_ON_DEVICE.ordinal)
         return builder.build()
     }

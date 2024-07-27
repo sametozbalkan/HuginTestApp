@@ -1,8 +1,10 @@
 package com.example.hugintestapp
 
+import android.content.Context
 import android.os.Bundle
 import android.os.Message
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -20,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import com.example.hugintestapp.ui.theme.HuginTestAppTheme
 import hugin.common.lib.constants.ErrorMessage
 import hugin.common.lib.constants.Errors
@@ -65,7 +68,7 @@ class MainActivity : ComponentActivity() {
                             )
                             (d10Client as SFAClient).sendD10Message(printRequest.build())
                             title = "Ödeme Başarısız"
-                            dialogContent = "Başarısız"
+                            dialogContent = "Ret"
                             showErrorDialog = true
                         }
                     }
@@ -123,8 +126,9 @@ class MainActivity : ComponentActivity() {
                         }) {
                             Text(text = "İade Dene")
                         }
+                        ServiceTestButton(d10Client)
                         if (showErrorDialog) {
-                            showDialog(
+                            ShowDialog(
                                 title = title,
                                 content = dialogContent,
                                 onConfirm = { showErrorDialog = false }
@@ -137,7 +141,17 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun showDialog(title: String, content: String, onConfirm: () -> Unit) {
+    fun ServiceTestButton(d10Client: D10Client) {
+        val context = LocalContext.current
+        Button(onClick = {
+            isServiceRunning(d10Client, context)
+        }) {
+            Text(text = "Servis Testi")
+        }
+    }
+
+    @Composable
+    private fun ShowDialog(title: String, content: String, onConfirm: () -> Unit) {
         var showDialog by remember { mutableStateOf(true) }
 
         if (showDialog) {
@@ -154,7 +168,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun payment(tranType: Int) {
-        val paymentRequestProtocolView = PaymentRequestProtocolView(tranType)
+        val paymentRequestProtocolView = PaymentRequestProtocol(tranType)
         val listener: PaymentProtocol.OnClickListener = object : PaymentProtocol.OnClickListener {
             override fun onSend(posMessage: POSMessage?) {
                 if (posMessage != null) {
@@ -195,6 +209,42 @@ class MainActivity : ComponentActivity() {
                     onResult(deviceModel, developer, isSupport507, printer)
                 } else {
                     onError(msg?.what ?: -1)
+                }
+            }
+        })
+    }
+
+    private fun isServiceRunning(d10Client: D10Client, context: Context) {
+        val serviceManager: SFAClient? = if (d10Client is SFAClient) {
+            d10Client as SFAClient?
+        } else {
+            return
+        }
+        serviceManager!!.sendTerminalInfo(object : SFAResponseListener {
+            override fun onResponse(msg: Message?) {
+                if (MessengerConsts.ACTION_TERMINAL_INFO == msg?.what) {
+                    val data = msg.data
+                    data.classLoader = BaseTarget::class.java.classLoader
+                    val errorCode = data.getInt(IntentConsts.EXTRA_ERROR_CODE)
+                    when (errorCode) {
+                        Errors.SUCCESS -> Toast.makeText(
+                            context,
+                            "SFA servisi aktif",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        Errors.FISCAL_SERVICE_NOT_READY -> Toast.makeText(
+                            context,
+                            "SFA servisi hazır değil",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        else -> Toast.makeText(
+                            context,
+                            "SFA servis bilgisi yok",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             }
         })
