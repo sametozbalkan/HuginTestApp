@@ -28,6 +28,7 @@ import hugin.common.lib.constants.MessengerConsts
 import hugin.common.lib.d10.POSMessage
 import hugin.common.lib.d10.PaymentResponse
 import hugin.common.lib.d10.PrintRequest
+import hugin.common.lib.d10.tables.TransactionType
 import hugin.common.lib.helper.BaseTarget
 
 class MainActivity : ComponentActivity() {
@@ -113,9 +114,14 @@ class MainActivity : ComponentActivity() {
                             Text(text = "Yazdır")
                         }
                         Button(onClick = {
-                            payment()
+                            payment(tranType = TransactionType.SALE)
                         }) {
-                            Text(text = "Ödeme Dene")
+                            Text(text = "Satış Dene")
+                        }
+                        Button(onClick = {
+                            payment(tranType = TransactionType.REFUND)
+                        }) {
+                            Text(text = "İade Dene")
                         }
                         if (showErrorDialog) {
                             showDialog(
@@ -147,8 +153,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun payment() {
-        val paymentRequestProtocolView = PaymentRequestProtocolView()
+    private fun payment(tranType: Int) {
+        val paymentRequestProtocolView = PaymentRequestProtocolView(tranType)
         val listener: PaymentProtocol.OnClickListener = object : PaymentProtocol.OnClickListener {
             override fun onSend(posMessage: POSMessage?) {
                 if (posMessage != null) {
