@@ -9,9 +9,11 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -30,6 +32,9 @@ import hugin.common.lib.helper.BaseTarget
 
 class MainActivity : ComponentActivity() {
     private lateinit var d10Client: D10Client
+    private var showErrorDialog by mutableStateOf(false)
+    private var dialogContent by mutableStateOf("")
+    private var title by mutableStateOf("")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,13 +47,25 @@ class MainActivity : ComponentActivity() {
                 } else {
                     if (posMessage is PaymentResponse) {
                         val errorCode = posMessage.errorCode
-                        if (errorCode == Errors.INCORRECT_CONTENT || errorCode != Errors.USER_INTERRUPT && errorCode != Errors.USER_TIMEOUT && errorCode <= 99) {
+                        Log.e("hata kodu", errorCode.toString())
+                        if (errorCode == Errors.INCORRECT_CONTENT || errorCode != Errors.USER_INTERRUPT && errorCode != Errors.USER_TIMEOUT && errorCode < 99) {
                             val printRequest = PrintRequest.Builder(
                                 posMessage.serialNo,
                                 posMessage.messageNumber + 1, posMessage.acquirerId
                             )
                             (d10Client as SFAClient).sendD10Message(printRequest.build())
-                            Log.e("ÇIKTI", printRequest.build().toString())
+                            title = "Ödeme Başarılı"
+                            dialogContent = "Başarılı"
+                            showErrorDialog = true
+                        } else if (errorCode == 99) {
+                            val printRequest = PrintRequest.Builder(
+                                posMessage.serialNo,
+                                posMessage.messageNumber + 1, posMessage.acquirerId
+                            )
+                            (d10Client as SFAClient).sendD10Message(printRequest.build())
+                            title = "Ödeme Başarısız"
+                            dialogContent = "Başarısız"
+                            showErrorDialog = true
                         }
                     }
                 }
@@ -98,11 +115,35 @@ class MainActivity : ComponentActivity() {
                         Button(onClick = {
                             payment()
                         }) {
-                            Text(text = "Try Payment")
+                            Text(text = "Ödeme Dene")
+                        }
+                        if (showErrorDialog) {
+                            showDialog(
+                                title = title,
+                                content = dialogContent,
+                                onConfirm = { showErrorDialog = false }
+                            )
                         }
                     }
                 }
             }
+        }
+    }
+
+    @Composable
+    private fun showDialog(title: String, content: String, onConfirm: () -> Unit) {
+        var showDialog by remember { mutableStateOf(true) }
+
+        if (showDialog) {
+            CustomAlertDialog(
+                title = title,
+                content = content,
+                onDismiss = { showDialog = false },
+                onConfirm = {
+                    showDialog = false
+                    onConfirm()
+                },
+            )
         }
     }
 
@@ -171,6 +212,25 @@ class MainActivity : ComponentActivity() {
             }
         })
     }
+}
+
+@Composable
+fun CustomAlertDialog(
+    title: String,
+    content: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = title) },
+        text = { Text(text = content) },
+        confirmButton = {
+            Button(onClick = onConfirm) {
+                Text("Tamam")
+            }
+        },
+    )
 }
 
 private const val strFreeFormat = """[
